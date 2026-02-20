@@ -1,0 +1,1051 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Bus Tracking - MyBusStand</title>
+    
+    <!-- Leaflet CSS for Real Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        /* Header Styles */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 25px;
+        }
+
+        .login-btn,
+        .logout-btn {
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover,
+        .logout-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .bus-info h1 {
+            color: #333;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .bus-details {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .bus-number {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .back-btn {
+            background: #f8f9fa;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tracking-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .map-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .map-header h2 {
+            color: #333;
+            font-size: 1.3rem;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: #27ae60;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .map-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #e1e1e1;
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 1000;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .zoom-btn:active {
+            transform: scale(0.95);
+        }
+
+        .zoom-in {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .zoom-out {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .zoom-reset {
+            background: linear-gradient(135deg, #667eea, #5a67d8);
+            color: white;
+        }
+
+        .map-content {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-origin: center center;
+            transition: transform 0.3s ease;
+        }
+
+        .route-line {
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            right: 10%;
+            height: 6px;
+            background: linear-gradient(90deg, #ffffff 0%, #ffffff 50%, #667eea 50%, #667eea 100%);
+            border-radius: 3px;
+            transform: translateY(-50%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .bus-marker {
+            position: absolute;
+            top: 50%;
+            left: 30%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 0.8rem 1rem;
+            border-radius: 50%;
+            font-size: 1.8rem;
+            box-shadow: 0 6px 12px rgba(255,107,107,0.3);
+            transition: all 0.5s ease;
+            z-index: 10;
+            animation: busMove 0.5s ease-in-out;
+        }
+
+        @keyframes busMove {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .stop-marker {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 4px solid #667eea;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stop-marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .stop-label {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .status-card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .status-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .eta-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .eta-time {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .eta-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .route-progress {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .route-progress h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .progress-bar {
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .route-stops {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .route-stop {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stop-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 auto 0.5rem;
+        }
+
+        .stop-completed {
+            background: #27ae60;
+        }
+
+        .stop-current {
+            background: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .stop-upcoming {
+            background: #e1e1e1;
+        }
+
+        .stop-name {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .alerts-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-message {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .alert-time {
+            color: #999;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 968px) {
+            .tracking-container {
+                grid-template-columns: 1fr;
+            }
+
+            .map-container {
+                height: 300px;
+            }
+
+            .eta-time {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .bus-info h1 {
+                font-size: 1.5rem;
+            }
+
+            .eta-time {
+                font-size: 2rem;
+            }
+
+            .route-stops {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .route-stop {
+                flex: 0 0 auto;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                🚌 MyBusStand
+            </div>
+            <nav class="nav-links">
+                <a href="{% url 'home' %}" class="nav-link">Home</a>
+                <a href="{% url 'route_search' %}" class="nav-link">Routes</a>
+                <a href="{% url 'bus_list' %}" class="nav-link">Buses</a>
+                <a href="{% url 'bus_tracking' %}" class="nav-link active">Tracking</a>
+                <a href="{% url 'chatbot' %}" class="nav-link">Support</a>
+                <a href="{% url 'about' %}" class="nav-link">About</a>
+                <a href="{% url 'contact' %}" class="nav-link">Contact</a>
+            </nav>
+            <div class="user-info">
+                {% if user.is_authenticated %}
+                    <div class="user-profile">
+                        <span>👤 {{ user.get_full_name|default:user.username }}</span>
+                        <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="login-btn">Mobile Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>� Live Bus Tracking</h1>
+            <p>Track your bus in real-time</p>
+        </div>
+            <nav class="nav-links">
+                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'route_search' %}">Routes</a>
+                <a href="{% url 'bus_list' %}">Buses</a>
+                <a href="{% url 'bus_tracking' %}">Tracking</a>
+                <a href="{% url 'chatbot' %}">Support</a>
+                <a href="{% url 'about' %}">About</a>
+                <a href="{% url 'contact' %}">Contact</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'logout' %}">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}">Login</a>
+                {% endif %}
+            </nav>
+        </header>
+
+        <div class="header">
+            <div class="bus-info">
+                <h1>Live Bus Tracking</h1>
+                <div class="bus-details">
+                    <div class="bus-number">Bus #{{ bus.bus_number|default:'KA-01-1234' }}</div>
+                    <div class="bus-route">{{ bus.route|default:'Electronic City → Majestic' }}</div>
+                </div>
+            </div>
+            <button class="back-btn" onclick="goBack()">← Back to Buses</button>
+        </div>
+
+        <div class="tracking-container">
+            <div class="map-section">
+                <div class="map-header">
+                    <h2>Live Location</h2>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>LIVE</span>
+                    </div>
+                </div>
+                <div class="map-container">
+                    <!-- Enhanced CSS Map with Zoom Controls -->
+                    <div class="map-placeholder" id="cssMap" style="display: block;">
+                        <!-- Zoom Controls -->
+                        <div class="zoom-controls">
+                            <button class="zoom-btn zoom-in" onclick="zoomIn()">+</button>
+                            <button class="zoom-btn zoom-out" onclick="zoomOut()">-</button>
+                            <button class="zoom-btn zoom-reset" onclick="resetZoom()">⟲</button>
+                        </div>
+                        
+                        <!-- Map Content -->
+                        <div class="map-content" id="mapContent">
+                            <div class="route-line"></div>
+                            <div class="stop-marker" style="left: 10%;">
+                                <div class="stop-label">Electronic City</div>
+                            </div>
+                            <div class="stop-marker" style="left: 35%;">
+                                <div class="stop-label">BTM Layout</div>
+                            </div>
+                            <div class="stop-marker" style="left: 60%;">
+                                <div class="stop-label">Koramangala</div>
+                            </div>
+                            <div class="stop-marker" style="left: 90%;">
+                                <div class="stop-label">MG Road</div>
+                            </div>
+                            <div class="bus-marker" id="busMarker">🚌</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Real Map (hidden by default) -->
+                    <div id="realMap" style="width: 100%; height: 400px; border-radius: 10px; display: none;"></div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <div class="status-card">
+                    <h3>Bus Status</h3>
+                    <div class="status-item">
+                        <span class="status-label">Current Speed</span>
+                        <span class="status-value" id="currentSpeed">45 km/h</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Next Stop</span>
+                        <span class="status-value" id="nextStop">Koramangala</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Distance to Next Stop</span>
+                        <span class="status-value" id="distanceToNext">2.3 km</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Passengers</span>
+                        <span class="status-value" id="passengerCount">28/40</span>
+                    </div>
+                </div>
+
+                <div class="eta-card">
+                    <div class="eta-label">Estimated Arrival Time</div>
+                    <div class="eta-time" id="etaTime">12 min</div>
+                    <div class="eta-label">at your destination</div>
+                </div>
+
+                <div class="route-progress">
+                    <h3>Journey Progress</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 35%;">
+                            35%
+                        </div>
+                    </div>
+                    <div class="route-stops">
+                        <div class="route-stop">
+                            <div class="stop-dot stop-completed"></div>
+                            <div class="stop-name">Electronic City</div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot stop-completed"></div>
+                            <div class="stop-name">BTM Layout</div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot stop-current"></div>
+                            <div class="stop-name">Koramangala</div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot stop-upcoming"></div>
+                            <div class="stop-name">MG Road</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alerts-section">
+            <h3>Travel Updates</h3>
+            <div id="alertsContainer">
+                <div class="alert-item">
+                    <div class="alert-icon">📍</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Bus departed from BTM Layout</div>
+                        <div class="alert-message">Your bus has left BTM Layout and is heading towards Koramangala</div>
+                        <div class="alert-time">2 minutes ago</div>
+                    </div>
+                </div>
+                <div class="alert-item">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Heavy traffic reported</div>
+                        <div class="alert-message">Expect 5-10 minute delay near Silk Board junction</div>
+                        <div class="alert-time">5 minutes ago</div>
+                    </div>
+                </div>
+                <div class="alert-item">
+                    <div class="alert-icon">✅</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Bus on time</div>
+                        <div class="alert-message">Your bus is running on schedule</div>
+                        <div class="alert-time">10 minutes ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS for Real Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        let busData = null;
+        let trackingInterval = null;
+        let currentProgress = 35;
+        let busPosition = 30;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBusData();
+            initializeCSSMap();
+            startLiveTracking();
+        });
+
+        let currentZoom = 1;
+        const minZoom = 0.5;
+        const maxZoom = 2;
+
+        function initializeCSSMap() {
+            // Use CSS map instead of real map
+            console.log('CSS Map initialized with zoom controls');
+            
+            // Hide real map, show CSS map
+            document.getElementById('realMap').style.display = 'none';
+            document.getElementById('cssMap').style.display = 'block';
+        }
+
+        function zoomIn() {
+            if (currentZoom < maxZoom) {
+                currentZoom += 0.2;
+                applyZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (currentZoom > minZoom) {
+                currentZoom -= 0.2;
+                applyZoom();
+            }
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const mapContent = document.getElementById('mapContent');
+            if (mapContent) {
+                mapContent.style.transform = `scale(${currentZoom})`;
+                console.log('Zoom applied:', currentZoom);
+            }
+        }
+
+        function loadBusData() {
+            const selectedBus = JSON.parse(localStorage.getItem('selectedBus'));
+            if (selectedBus) {
+                busData = selectedBus;
+                document.getElementById('busNumber').textContent = busData.number;
+                document.getElementById('busRoute').textContent = busData.route;
+            } else {
+                // Default data if no bus selected
+                busData = {
+                    number: 'KA-01-AB-1234',
+                    route: 'Electronic City → Koramangala → MG Road',
+                    departure: '08:30 AM',
+                    arrival: '09:45 AM'
+                };
+                document.getElementById('busNumber').textContent = busData.number;
+                document.getElementById('busRoute').textContent = busData.route;
+            }
+        }
+
+        function startLiveTracking() {
+            // Update tracking data every 3 seconds
+            trackingInterval = setInterval(() => {
+                updateBusLocation();
+                updateETA();
+                updateStatus();
+                addRandomAlert();
+            }, 3000);
+        }
+
+        function updateBusLocation() {
+            // Get real bus location from API
+            fetch('/api/bus-location/?bus_id=1')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const busData = data.data;
+                        
+                        // Update bus position on CSS map
+                        const busMarker = document.getElementById('busMarker');
+                        if (busMarker) {
+                            // Convert position percentage to actual map position
+                            const mapPosition = 10 + (busData.position_percentage * 0.8); // 10% to 90% of map width
+                            busMarker.style.left = mapPosition + '%';
+                            
+                            // Add pulse effect when position updates
+                            busMarker.style.animation = 'none';
+                            setTimeout(() => {
+                                busMarker.style.animation = 'busMove 0.5s ease-in-out';
+                            }, 100);
+                        }
+                        
+                        // Update speed with animation
+                        const speedElement = document.getElementById('currentSpeed');
+                        if (speedElement) {
+                            speedElement.textContent = busData.speed + ' km/h';
+                            speedElement.style.color = busData.speed > 40 ? '#27ae60' : '#f39c12';
+                        }
+                        
+                        // Update next stop with highlight
+                        const nextStopElement = document.getElementById('nextStop');
+                        if (nextStopElement) {
+                            nextStopElement.textContent = busData.next_stop;
+                            nextStopElement.style.fontWeight = 'bold';
+                            nextStopElement.style.color = '#667eea';
+                        }
+                        
+                        // Update distance to next stop
+                        const distanceElement = document.getElementById('distanceToNext');
+                        if (distanceElement) {
+                            distanceElement.textContent = busData.distance_to_next + ' km';
+                            distanceElement.style.color = busData.distance_to_next < 2 ? '#27ae60' : '#f39c12';
+                        }
+                        
+                        // Update passengers with capacity indicator
+                        const passengerElement = document.getElementById('passengerCount');
+                        if (passengerElement) {
+                            const capacity = 40;
+                            const percentage = (busData.passengers / capacity) * 100;
+                            passengerElement.textContent = busData.passengers + '/' + capacity;
+                            
+                            // Change color based on capacity
+                            if (percentage > 80) {
+                                passengerElement.style.color = '#e74c3c'; // Red - Crowded
+                            } else if (percentage > 60) {
+                                passengerElement.style.color = '#f39c12'; // Orange - Moderate
+                            } else {
+                                passengerElement.style.color = '#27ae60'; // Green - Available
+                            }
+                        }
+                        
+                        // Update ETA with urgency
+                        const etaElement = document.getElementById('etaTime');
+                        if (etaElement) {
+                            etaElement.textContent = busData.eta_minutes + ' min';
+                            etaElement.style.color = busData.eta_minutes < 5 ? '#27ae60' : '#f39c12';
+                        }
+                        
+                        // Update progress with smooth animation
+                        currentProgress = Math.round(busData.position_percentage);
+                        const progressFill = document.getElementById('progressFill');
+                        if (progressFill) {
+                            progressFill.style.width = currentProgress + '%';
+                            progressFill.textContent = currentProgress + '%';
+                            
+                            // Change color based on progress
+                            if (currentProgress > 75) {
+                                progressFill.style.background = 'linear-gradient(90deg, #27ae60 0%, #2ecc71 100%)';
+                            } else if (currentProgress > 50) {
+                                progressFill.style.background = 'linear-gradient(90deg, #f39c12 0%, #f1c40f 100%)';
+                            } else {
+                                progressFill.style.background = 'linear-gradient(90deg, #667eea 0%, #5a67d8 100%)';
+                            }
+                        }
+                        
+                        // Update status indicator
+                        const statusIndicator = document.querySelector('.live-indicator');
+                        if (statusIndicator) {
+                            statusIndicator.style.color = busData.status === 'On Time' ? '#27ae60' : '#f39c12';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching bus location:', error);
+                });
+        }
+
+        function updateETA() {
+            // ETA is now updated by updateBusLocation() from API
+        }
+
+        function updateStatus() {
+            // Status is now updated by updateBusLocation() from API
+        }
+
+        function addRandomAlert() {
+            // Occasionally add new alerts
+            if (Math.random() > 0.8) {
+                const alerts = [
+                    { icon: '📍', title: 'Bus approaching stop', message: 'Get ready for the next stop' },
+                    { icon: '🚦', title: 'Traffic signal', message: 'Bus waiting at traffic signal' },
+                    { icon: '🌧️', title: 'Weather update', message: 'Light rain in the area' },
+                    { icon: '👥', title: 'Crowding alert', message: 'Bus is getting crowded' }
+                ];
+
+                const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
+                const alertsContainer = document.getElementById('alertsContainer');
+                
+                const newAlert = document.createElement('div');
+                newAlert.className = 'alert-item';
+                newAlert.innerHTML = `
+                    <div class="alert-icon">${randomAlert.icon}</div>
+                    <div class="alert-content">
+                        <div class="alert-title">${randomAlert.title}</div>
+                        <div class="alert-message">${randomAlert.message}</div>
+                        <div class="alert-time">Just now</div>
+                    </div>
+                `;
+
+                alertsContainer.insertBefore(newAlert, alertsContainer.firstChild);
+
+                // Keep only last 5 alerts
+                const alertItems = alertsContainer.querySelectorAll('.alert-item');
+                if (alertItems.length > 5) {
+                    alertItems[alertItems.length - 1].remove();
+                }
+            }
+        }
+
+        function goBack() {
+            if (trackingInterval) {
+                clearInterval(trackingInterval);
+            }
+            window.location.href = '/buses/';
+        }
+
+        // Clean up interval when page is unloaded
+        window.addEventListener('beforeunload', function() {
+            if (trackingInterval) {
+                clearInterval(trackingInterval);
+            }
+        });
+
+        // Auth is handled by Django session (login_required)
+    </script>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="{% url 'home' %}" class="nav-link">Home</a>
+            <a href="{% url 'about' %}" class="nav-link">About</a>
+            <a href="{% url 'contact' %}" class="nav-link">Contact</a>
+            <a href="{% url 'chatbot' %}" class="nav-link">Support</a>
+        </div>
+        <p>&copy; 2024 MyBusStand. All rights reserved. Made with ❤️ for smart travelers.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Management - MyBusStand</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .cookie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .cookie-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .cookie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .cookie-card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cookie-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .cookies-display {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .cookies-display h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cookie-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .cookie-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .cookie-item h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .cookie-item p {
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .cookie-item .meta {
+            font-size: 0.9rem;
+            color: #999;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .message {
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .no-cookies {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .cookie-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .cookie-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍪 Cookie Management</h1>
+            <p>Manage your cookies and preferences for MyBusStand</p>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <div class="cookie-grid">
+            <!-- Set Custom Cookie -->
+            <div class="cookie-card">
+                <h3>🍪 Set Custom Cookie</h3>
+                <form class="cookie-form" onsubmit="setCustomCookie(event)">
+                    <div class="form-group">
+                        <label for="cookieName">Cookie Name</label>
+                        <input type="text" id="cookieName" placeholder="Enter cookie name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cookieValue">Cookie Value</label>
+                        <input type="text" id="cookieValue" placeholder="Enter cookie value" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cookieAge">Expiration (hours)</label>
+                        <input type="number" id="cookieAge" value="24" min="1" max="365">
+                    </div>
+                    <button type="submit" class="btn">Set Cookie</button>
+                </form>
+            </div>
+
+            <!-- Delete Cookie -->
+            <div class="cookie-card">
+                <h3>🗑️ Delete Cookie</h3>
+                <form class="cookie-form" onsubmit="deleteCookie(event)">
+                    <div class="form-group">
+                        <label for="deleteCookieName">Cookie Name</label>
+                        <input type="text" id="deleteCookieName" placeholder="Enter cookie name to delete" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Delete Cookie</button>
+                </form>
+            </div>
+
+            <!-- Clear All Cookies -->
+            <div class="cookie-card">
+                <h3>🧹 Clear All Cookies</h3>
+                <p style="margin-bottom: 20px; color: #666;">Remove all application cookies and reset preferences</p>
+                <button class="btn btn-danger" onclick="clearAllCookies()">Clear All Cookies</button>
+            </div>
+
+            <!-- Theme Preference -->
+            <div class="cookie-card">
+                <h3>🎨 Theme Preference</h3>
+                <form class="cookie-form" onsubmit="setThemePreference(event)">
+                    <div class="form-group">
+                        <label for="themeSelect">Choose Theme</label>
+                        <select id="themeSelect">
+                            <option value="light">Light Theme</option>
+                            <option value="dark">Dark Theme</option>
+                            <option value="auto">Auto (System)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Set Theme</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Current Cookies Display -->
+        <div class="cookies-display">
+            <h3>📋 Current Cookies</h3>
+            <div id="cookiesList">
+                <div class="loading">Loading cookies...</div>
+            </div>
+            <button class="btn btn-warning" onclick="loadCookies()" style="margin-top: 20px;">🔄 Refresh Cookies</button>
+        </div>
+    </div>
+
+    <script>
+        // Load cookies on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Cookie dashboard loaded');
+            loadCookies();
+        });
+
+        // Load and display cookies
+        async function loadCookies() {
+            console.log('Loading cookies...');
+            const cookiesList = document.getElementById('cookiesList');
+            cookiesList.innerHTML = '<div class="loading">Loading cookies...</div>';
+            
+            try {
+                const response = await fetch('/api/cookies/');
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    displayCookies(data.cookies);
+                    showMessage('Cookies loaded successfully!', 'success');
+                } else {
+                    showMessage('Failed to load cookies: ' + (data.error || 'Unknown error'), 'error');
+                    cookiesList.innerHTML = '<div class="no-cookies">Failed to load cookies</div>';
+                }
+            } catch (error) {
+                console.error('Error loading cookies:', error);
+                showMessage('Error loading cookies: ' + error.message, 'error');
+                cookiesList.innerHTML = '<div class="no-cookies">Error loading cookies</div>';
+            }
+        }
+
+        // Display cookies
+        function displayCookies(cookies) {
+            const container = document.getElementById('cookiesList');
+            
+            if (!cookies || Object.keys(cookies).length === 0) {
+                container.innerHTML = '<div class="no-cookies">No cookies found</div>';
+                return;
+            }
+
+            let html = '';
+            for (const [name, info] of Object.entries(cookies)) {
+                html += `
+                    <div class="cookie-item">
+                        <h4>${name}</h4>
+                        <p><strong>Value:</strong> ${info.value}</p>
+                        <div class="meta">
+                            <span>🔒 Secure: ${info.secure ? 'Yes' : 'No'}</span>
+                            <span>🛡️ HttpOnly: ${info.httponly ? 'Yes' : 'No'}</span>
+                            <span>🌐 SameSite: ${info.samesite}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+            console.log('Cookies displayed:', Object.keys(cookies).length);
+        }
+
+        // Set custom cookie
+        async function setCustomCookie(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('cookieName').value;
+            const value = document.getElementById('cookieValue').value;
+            const maxAge = document.getElementById('cookieAge').value * 3600; // Convert hours to seconds
+            
+            console.log('Setting cookie:', { name, value, maxAge });
+            
+            try {
+                const response = await fetch('/api/set-cookie/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        value: value,
+                        max_age: maxAge
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Set cookie response:', data);
+                
+                if (data.success) {
+                    showMessage(`Cookie '${name}' set successfully!`, 'success');
+                    document.getElementById('cookieName').value = '';
+                    document.getElementById('cookieValue').value = '';
+                    loadCookies(); // Refresh cookies display
+                } else {
+                    showMessage('Failed to set cookie: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error setting cookie:', error);
+                showMessage('Error setting cookie: ' + error.message, 'error');
+            }
+        }
+
+        // Delete cookie
+        async function deleteCookie(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('deleteCookieName').value;
+            
+            if (!name) {
+                showMessage('Please enter a cookie name', 'error');
+                return;
+            }
+            
+            console.log('Deleting cookie:', name);
+            
+            try {
+                const response = await fetch('/api/delete-cookie/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        name: name
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Delete cookie response:', data);
+                
+                if (data.success) {
+                    showMessage(`Cookie '${name}' deleted successfully!`, 'success');
+                    document.getElementById('deleteCookieName').value = '';
+                    loadCookies(); // Refresh cookies display
+                } else {
+                    showMessage('Failed to delete cookie: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting cookie:', error);
+                showMessage('Error deleting cookie: ' + error.message, 'error');
+            }
+        }
+
+        // Clear all cookies
+        async function clearAllCookies() {
+            if (!confirm('Are you sure you want to clear all cookies? This will log you out.')) {
+                return;
+            }
+            
+            console.log('Clearing all cookies...');
+            
+            try {
+                const response = await fetch('/api/clear-cookies/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('Clear cookies response:', data);
+                
+                if (data.success) {
+                    showMessage('All cookies cleared successfully! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showMessage('Failed to clear cookies: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error clearing cookies:', error);
+                showMessage('Error clearing cookies: ' + error.message, 'error');
+            }
+        }
+
+        // Set theme preference
+        async function setThemePreference(event) {
+            event.preventDefault();
+            
+            const theme = document.getElementById('themeSelect').value;
+            
+            console.log('Setting theme:', theme);
+            
+            try {
+                const response = await fetch('/api/set-cookie/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        name: 'theme_preference',
+                        value: theme,
+                        max_age: 86400 * 30 // 30 days
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Set theme response:', data);
+                
+                if (data.success) {
+                    showMessage(`Theme set to ${theme} successfully!`, 'success');
+                    // Apply theme immediately
+                    applyTheme(theme);
+                } else {
+                    showMessage('Failed to set theme: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error setting theme:', error);
+                showMessage('Error setting theme: ' + error.message, 'error');
+            }
+        }
+
+        // Apply theme
+        function applyTheme(theme) {
+            console.log('Applying theme:', theme);
+            if (theme === 'dark') {
+                document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+                showMessage('Dark theme applied!', 'info');
+            } else if (theme === 'light') {
+                document.body.style.filter = 'none';
+                showMessage('Light theme applied!', 'info');
+            } else {
+                showMessage('Auto theme selected - following system preference', 'info');
+            }
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            let icon = '';
+            if (type === 'success') icon = '✅';
+            else if (type === 'error') icon = '❌';
+            else if (type === 'info') icon = 'ℹ️';
+            
+            messageDiv.innerHTML = `<span>${icon}</span> ${message}`;
+            
+            container.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Log current cookies on load
+        setTimeout(() => {
+            console.log('Current document cookies:', document.cookie);
+        }, 1000);
+    </script>
+</body>
+</html>

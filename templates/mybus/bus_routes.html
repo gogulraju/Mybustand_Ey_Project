@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Routes & Search - MyBusStand</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .search-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 20px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .form-group input {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            height: fit-content;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .routes-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .routes-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .routes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .route-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 3px solid #667eea;
+            font-size: 0.95rem;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .route-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: #e3f2fd;
+        }
+
+        .results-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            grid-column: 1 / -1;
+        }
+
+        .results-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bus-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .bus-item {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bus-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .bus-item h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bus-item .route-info {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .bus-item .schedule {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .bus-item .time {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .bus-item .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background: #4caf50;
+            color: white;
+        }
+
+        .message {
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .search-form {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .bus-item .schedule {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚌 Bus Routes & Search</h1>
+            <p>Search buses and view available routes</p>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <div class="main-content">
+            <!-- Search Section -->
+            <div class="search-section">
+                <h3>🔍 Search Buses</h3>
+                <form class="search-form" onsubmit="searchBuses(event)">
+                    <div class="form-group">
+                        <label for="fromCity">📍 From City</label>
+                        <input type="text" id="fromCity" placeholder="Enter departure city" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="toCity">🎯 To City</label>
+                        <input type="text" id="toCity" placeholder="Enter destination city" required>
+                    </div>
+                    <button type="submit" class="btn" id="searchBtn">
+                        🔍 Search Buses
+                    </button>
+                </form>
+                
+                <!-- Quick Examples -->
+                <div style="margin-top: 20px;">
+                    <p style="margin-bottom: 10px; color: #666;">🚀 Quick Examples:</p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button type="button" class="btn" onclick="fillExample('Chennai', 'Kanchipuram')" style="font-size: 0.9rem; padding: 10px 20px;">
+                            Chennai → Kanchipuram
+                        </button>
+                        <button type="button" class="btn" onclick="fillExample('Melmaruvathur', 'Vandavasi')" style="font-size: 0.9rem; padding: 10px 20px;">
+                            Melmaruvathur → Vandavasi
+                        </button>
+                        <button type="button" class="btn" onclick="fillExample('Kumbakonam', 'Thanjavur')" style="font-size: 0.9rem; padding: 10px 20px;">
+                            Kumbakonam → Thanjavur
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Routes Section -->
+            <div class="routes-section">
+                <h3>🛣️ Available Routes</h3>
+                <div class="routes-grid">
+                    <div class="route-item" onclick="fillExample('Melmaruvathur', 'Vandavasi')">
+                        <strong>Melmaruvathur → Vandavasi</strong>
+                    </div>
+                    <div class="route-item" onclick="fillExample('Chennai', 'Kanchipuram')">
+                        <strong>Chennai → Kanchipuram</strong>
+                    </div>
+                    <div class="route-item" onclick="fillExample('Kanchipuram', 'Vellore')">
+                        <strong>Kanchipuram → Vellore</strong>
+                    </div>
+                    <div class="route-item" onclick="fillExample('Vellore', 'Tiruvannamalai')">
+                        <strong>Vellore → Tiruvannamalai</strong>
+                    </div>
+                    <div class="route-item" onclick="fillExample('Tiruvannamalai', 'Villupuram')">
+                        <strong>Tiruvannamalai → Villupuram</strong>
+                    </div>
+                    <div class="route-item" onclick="fillExample('Villupuram', 'Puducherry')">
+                        <strong>Villupuram → Puducherry</strong>
+                    </div>
+                    <div class="route-item" onclick="fillExample('Puducherry', 'Cuddalore')">
+                        <strong>Puducherry → Cuddalore</strong>
+                    </div>
+                    <div class="route-item" onclick="fillExample('Cuddalore', 'Chidambaram')">
+                        <strong>Cuddalore → Chidambaram</strong>
+                    </div>
+                    <div class="route-item" onclick="fillExample('Chidambaram', 'Mayiladuthurai')">
+                        <strong>Chidambaram → Mayiladuthurai</strong>
+                    </div>
+                    <div class="route-item" onclick="fillExample('Mayiladuthurai', 'Kumbakonam')">
+                        <strong>Mayiladuthurai → Kumbakonam</strong>
+                    </div>
+                    <div class="route-item" onclick="fillExample('Kumbakonam', 'Thanjavur')">
+                        <strong>Kumbakonam → Thanjavur</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div id="resultsContainer" style="display: none;">
+            <div class="results-section">
+                <h3>🚌 Available Buses</h3>
+                <div id="busList" class="bus-list">
+                    <div class="loading">Searching for buses...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Search buses function
+        async function searchBuses(event) {
+            event.preventDefault();
+            
+            const fromCity = document.getElementById('fromCity').value.trim();
+            const toCity = document.getElementById('toCity').value.trim();
+            const searchBtn = document.getElementById('searchBtn');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const busList = document.getElementById('busList');
+            const messageContainer = document.getElementById('messageContainer');
+            
+            if (!fromCity || !toCity) {
+                showMessage('Please enter both departure and destination cities', 'error');
+                return;
+            }
+            
+            // Show loading state
+            searchBtn.disabled = true;
+            searchBtn.textContent = '🔄 Searching...';
+            resultsContainer.style.display = 'block';
+            busList.innerHTML = '<div class="loading">Searching for buses...</div>';
+            messageContainer.innerHTML = '';
+            
+            try {
+                const response = await fetch('/bus/api/search-bus/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        'from': fromCity,
+                        'to': toCity
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayBuses(data.buses, data.route);
+                    showMessage(`Found ${data.total_buses} bus(es) for ${data.route}`, 'success');
+                } else {
+                    displayNoResults();
+                    showMessage(data.error || 'No buses available for this route', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                displayNoResults();
+                showMessage('Error searching for buses. Please try again.', 'error');
+            } finally {
+                // Reset button state
+                searchBtn.disabled = false;
+                searchBtn.textContent = '🔍 Search Buses';
+            }
+        }
+        
+        // Display buses
+        function displayBuses(buses, route) {
+            const busList = document.getElementById('busList');
+            
+            if (!buses || buses.length === 0) {
+                displayNoResults();
+                return;
+            }
+            
+            let html = '';
+            buses.forEach(bus => {
+                html += `
+                    <div class="bus-item" onclick="trackBus(${bus.id})">
+                        <h4>🚌 ${bus.bus_name}</h4>
+                        <div class="route-info">🛣️ ${bus.route}</div>
+                        <div class="schedule">
+                            <div class="time">🕐 ${bus.departure_time}</div>
+                            <div class="time">🕑 ${bus.arrival_time}</div>
+                        </div>
+                        <span class="status">${bus.status}</span>
+                    </div>
+                `;
+            });
+            
+            busList.innerHTML = html;
+        }
+        
+        // Display no results
+        function displayNoResults() {
+            const busList = document.getElementById('busList');
+            busList.innerHTML = '<div class="no-results">🚌 No buses available for this route</div>';
+        }
+        
+        // Track bus function
+        function trackBus(busId) {
+            window.open(`/bus/bus-tracking-map/?bus_id=${busId}`, '_blank');
+        }
+        
+        // Show message
+        function showMessage(message, type) {
+            const messageContainer = document.getElementById('messageContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            let icon = '';
+            if (type === 'success') icon = '✅';
+            else if (type === 'error') icon = '❌';
+            else if (type === 'info') icon = 'ℹ️';
+            
+            messageDiv.innerHTML = `<span>${icon}</span> ${message}`;
+            
+            messageContainer.appendChild(messageDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+        
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Fill example function
+        function fillExample(from, to) {
+            document.getElementById('fromCity').value = from;
+            document.getElementById('toCity').value = to;
+            
+            // Auto-search after filling example
+            setTimeout(() => {
+                document.getElementById('searchBtn').click();
+            }, 500);
+        }
+        
+        // Log page load
+        console.log('Bus Routes & Search Page Loaded');
+    </script>
+</body>
+</html>

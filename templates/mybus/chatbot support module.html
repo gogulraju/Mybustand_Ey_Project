@@ -1,0 +1,911 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Support - MyBusStand</title>
+    <style>
+        /* Header Styles */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 25px;
+        }
+
+        .login-btn,
+        .logout-btn {
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover,
+        .logout-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .footer-links .nav-link:hover {
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .user-info {
+                margin-top: 1rem;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+        }
+
+        .chat-container {
+            max-width: 900px;
+            margin: 0 auto;
+            height: calc(100vh - 200px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: white;
+            border-radius: 15px 15px 0 0;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .bot-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .bot-details h2 {
+            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .bot-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+        }
+
+        .ai-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .ai-badge.chatgpt {
+            background: rgba(16, 163, 127, 0.3);
+        }
+
+        .ai-badge.fallback {
+            background: rgba(251, 146, 60, 0.3);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #27ae60;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .close-btn {
+            background: #f8f9fa;
+            border: 2px solid #e1e1e1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .close-btn:hover {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+
+        .chat-messages {
+            flex: 1;
+            background: white;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            max-width: 80%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-bubble {
+            padding: 1rem;
+            border-radius: 15px;
+            margin-bottom: 0.5rem;
+        }
+
+        .message.bot .message-bubble {
+            background: #f8f9fa;
+            color: #333;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #999;
+            text-align: right;
+        }
+
+        .message.user .message-time {
+            text-align: left;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-bottom-left-radius: 5px;
+            max-width: 80px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #666;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .quick-actions {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .quick-actions h3 {
+            color: #333;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: #f8f9fa;
+            border: 1px solid #e1e1e1;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .chat-input {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            padding: 1.5rem;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-size: 1.2rem;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .welcome-message h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .faq-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .faq-item {
+            margin-bottom: 1rem;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-answer {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                height: calc(100vh - 20px);
+                margin: 0 10px;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .action-buttons {
+                justify-content: center;
+            }
+
+            .quick-actions h3 {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                🚌 MyBusStand
+            </div>
+            <nav class="nav-links">
+                <a href="{% url 'home' %}" class="nav-link">Home</a>
+                <a href="{% url 'route_search' %}" class="nav-link">Routes</a>
+                <a href="{% url 'bus_list' %}" class="nav-link">Buses</a>
+                <a href="{% url 'bus_tracking' %}" class="nav-link">Tracking</a>
+                <a href="{% url 'chatbot' %}" class="nav-link active">Support</a>
+                <a href="{% url 'about' %}" class="nav-link">About</a>
+                <a href="{% url 'contact' %}" class="nav-link">Contact</a>
+            </nav>
+            <div class="user-info">
+                {% if user.is_authenticated %}
+                    <div class="user-profile">
+                        <span>👤 {{ user.get_full_name|default:user.username }}</span>
+                        <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="login-btn">Mobile Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>🤖 Chatbot Support</h1>
+            <p>Get instant help with our AI assistant</p>
+        </div>
+
+        <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-info">
+                <div class="bot-avatar">🤖</div>
+                <div class="bot-details">
+                    <h2>MyBusStand Assistant</h2>
+                    <div class="bot-status">
+                        <div class="status-dot"></div>
+                        <span>Always here to help</span>
+                        <span class="ai-badge fallback" id="aiStatus">AI Assistant</span>
+                    </div>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeChat()">×</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <div class="bot-avatar" style="margin: 0 auto 1rem;">🤖</div>
+                <h3>Welcome to MyBusStand Support!</h3>
+                <p>I'm here to help you with bus routes, timings, fares, and more. Ask me anything!</p>
+            </div>
+
+            <div class="faq-section">
+                <h3 style="margin-bottom: 1rem; color: #333;">Frequently Asked Questions</h3>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="askQuestion(this)">
+                        <span>How do I book a bus ticket?</span>
+                        <span>+</span>
+                    </div>
+                    <div class="faq-answer">
+                        Simply search for your route, select a bus, and click on the booking option. You can pay online or choose cash on arrival.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="askQuestion(this)">
+                        <span>What are the payment options?</span>
+                        <span>+</span>
+                    </div>
+                    <div class="faq-answer">
+                        We accept credit/debit cards, UPI, net banking, and digital wallets. You can also pay cash at the bus stand.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="askQuestion(this)">
+                        <span>How can I track my bus?</span>
+                        <span>+</span>
+                    </div>
+                    <div class="faq-answer">
+                        After booking, click on the "Track Bus" button to see real-time location and estimated arrival time.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <h3>Quick Help</h3>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="sendQuickMessage('Bus routes')">🚌 Bus Routes</button>
+                <button class="action-btn" onclick="sendQuickMessage('Ticket prices')">💰 Ticket Prices</button>
+                <button class="action-btn" onclick="sendQuickMessage('Bus timings')">⏰ Bus Timings</button>
+                <button class="action-btn" onclick="sendQuickMessage('Live tracking')">📍 Live Tracking</button>
+                <button class="action-btn" onclick="sendQuickMessage('Refund policy')">🔄 Refund Policy</button>
+                <button class="action-btn" onclick="sendQuickMessage('Contact support')">📞 Contact Support</button>
+            </div>
+        </div>
+
+        <div class="chat-input">
+            <div class="input-container">
+                <input type="text" class="message-input" id="messageInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const responses = {
+            'bus routes': 'I can help you find bus routes between any two locations. Just tell me your source and destination, or use our route search feature for detailed options.',
+            'ticket prices': 'Bus fares vary based on distance and bus type. AC buses cost ₹65-120, Non-AC buses cost ₹30-80, and Volvo buses cost ₹85-150. Exact fare depends on your route.',
+            'bus timings': 'Buses typically run from 6:00 AM to 11:00 PM. Peak hours have more frequent buses - every 10-15 minutes. Off-peak frequency is every 30-45 minutes.',
+            'live tracking': 'You can track any bus in real-time! After selecting your bus, click the "Track Bus" button to see live location, ETA, and journey progress.',
+            'refund policy': 'Full refund is available if cancelled 2 hours before departure. 50% refund for cancellations 1 hour before. No refund for cancellations less than 1 hour before departure.',
+            'contact support': 'You can reach our support team at 📞 1800-123-4567 (24/7) or email support@mybusstand.com. We typically respond within 2 hours.',
+            'booking': 'To book a ticket: 1) Search your route 2) Select preferred bus 3) Choose seats 4) Make payment 5) Receive confirmation SMS with ticket details.',
+            'cancellation': 'Go to "My Bookings" in your profile, select the ticket to cancel, and click "Cancel". Refund will be processed according to our policy.',
+            'payment': 'We accept all major credit/debit cards, UPI (PhonePe, GPay, Paytm), net banking, and digital wallets. Cash payment available at select bus stands.',
+            'lost ticket': 'Don\'t worry! Go to "My Bookings" and download your ticket again. You can also show the confirmation SMS at the bus stand.',
+            'delay': 'If your bus is delayed, you can track it live for updated ETA. For delays over 30 minutes, you can request a voucher for future travel.',
+            'help': 'I\'m here to help! You can ask me about routes, timings, fares, booking, tracking, or any other bus-related questions.'
+        };
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addUserMessage(message);
+            input.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Simulate bot response delay
+            setTimeout(() => {
+                hideTypingIndicator();
+            }, 400);
+
+            try {
+                const resp = await fetch('/chatbot/api/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message }),
+                });
+                if (!resp.ok) {
+                    throw new Error('API error');
+                }
+                const data = await resp.json();
+                
+                // Update AI status badge based on response
+                updateAIStatus(data.using_chatgpt || false);
+                
+                addBotMessage(data.reply || getBotResponse(message));
+            } catch (e) {
+                updateAIStatus(false);
+                addBotMessage(getBotResponse(message));
+            }
+        }
+
+        async function sendQuickMessage(topic) {
+            addUserMessage(topic);
+            showTypingIndicator();
+            
+            setTimeout(() => {
+                hideTypingIndicator();
+            }, 400);
+
+            try {
+                const resp = await fetch('/chatbot/api/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: topic }),
+                });
+                if (!resp.ok) {
+                    throw new Error('API error');
+                }
+                const data = await resp.json();
+                addBotMessage(data.reply || getBotResponse(topic.toLowerCase()));
+            } catch (e) {
+                addBotMessage(getBotResponse(topic.toLowerCase()));
+            }
+        }
+
+        function addUserMessage(message) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.innerHTML = `
+                <div class="message-avatar">👤</div>
+                <div class="message-content">
+                    <div class="message-bubble">${message}</div>
+                    <div class="message-time">${getCurrentTime()}</div>
+                </div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function addBotMessage(message) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="message-bubble">${message}</div>
+                    <div class="message-time">${getCurrentTime()}</div>
+                </div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            messagesContainer.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function getBotResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Check for exact matches first
+            for (const [key, response] of Object.entries(responses)) {
+                if (lowerMessage.includes(key)) {
+                    return response;
+                }
+            }
+            
+            // Check for related keywords
+            if (lowerMessage.includes('route') || lowerMessage.includes('from') || lowerMessage.includes('to')) {
+                return responses['bus routes'];
+            }
+            
+            if (lowerMessage.includes('price') || lowerMessage.includes('fare') || lowerMessage.includes('cost')) {
+                return responses['ticket prices'];
+            }
+            
+            if (lowerMessage.includes('time') || lowerMessage.includes('schedule') || lowerMessage.includes('when')) {
+                return responses['bus timings'];
+            }
+            
+            if (lowerMessage.includes('track') || lowerMessage.includes('location') || lowerMessage.includes('where')) {
+                return responses['live tracking'];
+            }
+            
+            if (lowerMessage.includes('book') || lowerMessage.includes('reservation') || lowerMessage.includes('ticket')) {
+                return responses['booking'];
+            }
+            
+            if (lowerMessage.includes('cancel') || lowerMessage.includes('refund')) {
+                return responses['cancellation'];
+            }
+            
+            if (lowerMessage.includes('pay') || lowerMessage.includes('payment')) {
+                return responses['payment'];
+            }
+            
+            if (lowerMessage.includes('lost') || lowerMessage.includes('missing')) {
+                return responses['lost ticket'];
+            }
+            
+            if (lowerMessage.includes('late') || lowerMessage.includes('delay')) {
+                return responses['delay'];
+            }
+            
+            // Default response
+            return 'I understand you\'re asking about "' + message + '". I can help you with bus routes, timings, fares, booking, tracking, and more. Could you please be more specific or try one of the quick help options above?';
+        }
+
+        function askQuestion(element) {
+            const question = element.querySelector('span').textContent;
+            const answer = element.nextElementSibling.querySelector('.faq-answer').textContent;
+            
+            addUserMessage(question);
+            showTypingIndicator();
+            
+            setTimeout(() => {
+                hideTypingIndicator();
+                addBotMessage(answer);
+            }, 1000);
+        }
+
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+        }
+
+        function scrollToBottom() {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function updateAIStatus(isChatGPT) {
+            const aiStatus = document.getElementById('aiStatus');
+            if (isChatGPT) {
+                aiStatus.textContent = 'ChatGPT';
+                aiStatus.className = 'ai-badge chatgpt';
+            } else {
+                aiStatus.textContent = 'AI Assistant';
+                aiStatus.className = 'ai-badge fallback';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function closeChat() {
+            if (confirm('Are you sure you want to close the chat? You can return anytime for help!')) {
+                window.location.href = '/';
+            }
+        }
+
+        // Initialize chat with welcome message
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                addBotMessage('Hello! 👋 I\'m your MyBusStand assistant. How can I help you today? You can ask me about bus routes, timings, fares, or use the quick help buttons below.');
+            }, 1000);
+        });
+
+        // Auth is handled by Django session (login_required)
+    </script>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="{% url 'home' %}" class="nav-link">Home</a>
+            <a href="{% url 'about' %}" class="nav-link">About</a>
+            <a href="{% url 'contact' %}" class="nav-link">Contact</a>
+            <a href="{% url 'chatbot' %}" class="nav-link">Support</a>
+        </div>
+        <p>&copy; 2024 MyBusStand. All rights reserved. Made with ❤️ for smart travelers.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,505 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Authentication - MyBusStand</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .auth-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 200px);
+        }
+
+        .auth-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 1.2rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .timer {
+            text-align: center;
+            color: #666;
+            margin-top: 1rem;
+        }
+
+        .resend-link {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .resend-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .success {
+            color: #27ae60;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">🚌 MyBusStand</div>
+            <nav class="nav-links">
+                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'route_search' %}">Routes</a>
+                <a href="{% url 'bus_list' %}">Buses</a>
+                <a href="{% url 'bus_tracking' %}">Tracking</a>
+                <a href="{% url 'chatbot' %}">Support</a>
+                <a href="{% url 'about' %}">About</a>
+                <a href="{% url 'contact' %}">Contact</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'logout' %}">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}">Login</a>
+                {% endif %}
+            </nav>
+        </header>
+
+        <div class="auth-wrapper">
+            <div class="auth-container">
+        <div class="logo">
+            <h1>🚌 MyBusStand</h1>
+            <p>Secure Login System</p>
+        </div>
+
+        <!-- Mobile Number Input Form -->
+        <div id="mobileForm">
+            <div class="form-group">
+                <label for="mobileNumber">Enter Mobile Number</label>
+                <input type="tel" id="mobileNumber" placeholder="+91 98765 43210" maxlength="10">
+                <div class="error" id="mobileError"></div>
+            </div>
+            <button class="btn" onclick="sendOTP()">Send OTP</button>
+        </div>
+
+        <!-- OTP Verification Form -->
+        <div id="otpForm" class="hidden">
+            <div class="form-group">
+                <label>Enter OTP</label>
+                <div class="otp-inputs">
+                    <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 0)">
+                    <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 1)">
+                    <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 2)">
+                    <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 3)">
+                    <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 4)">
+                    <input type="text" class="otp-input" maxlength="1" onkeyup="moveToNext(this, 5)">
+                </div>
+                <div class="error" id="otpError"></div>
+            </div>
+            <button class="btn" onclick="verifyOTP()">Verify OTP</button>
+            <div class="timer" id="timer">Time remaining: 60s</div>
+            <div class="resend-link">
+                <a href="#" onclick="resendOTP()">Resend OTP</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let generatedOTP = '';
+        let timerInterval;
+        let timeRemaining = 60;
+
+        function sendOTP() {
+            const mobileNumber = document.getElementById('mobileNumber').value;
+            const mobileError = document.getElementById('mobileError');
+            
+            // Reset error
+            mobileError.textContent = '';
+            
+            // Validate mobile number
+            if (!mobileNumber || mobileNumber.length !== 10 || !/^[6-9]\d{9}$/.test(mobileNumber)) {
+                mobileError.textContent = 'Please enter a valid 10-digit mobile number';
+                return;
+            }
+
+            // Send OTP via Django API
+            fetch('/api/send-otp/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ mobile: mobileNumber })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.sms_sent) {
+                        showMessage('OTP sent successfully via SMS!', 'success');
+                    } else {
+                        showMessage(`Demo OTP: ${data.demo_otp}`, 'info');
+                    }
+                    
+                    // Switch to OTP form
+                    document.getElementById('mobileForm').classList.add('hidden');
+                    document.getElementById('otpForm').classList.remove('hidden');
+                    
+                    // Store mobile number for verification
+                    document.getElementById('otpForm').dataset.mobile = mobileNumber;
+                    
+                    // Start timer
+                    startTimer();
+                } else {
+                    mobileError.textContent = data.error || 'Failed to send OTP';
+                }
+            })
+            .catch(error => {
+                console.error('Error sending OTP:', error);
+                mobileError.textContent = 'Network error. Please try again.';
+            });
+        }
+
+        function verifyOTP() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const enteredOTP = Array.from(otpInputs).map(input => input.value).join('');
+            const otpError = document.getElementById('otpError');
+            const mobileNumber = document.getElementById('otpForm').dataset.mobile;
+            
+            // Reset error
+            otpError.textContent = '';
+            
+            // Validate OTP
+            if (enteredOTP.length !== 6) {
+                otpError.textContent = 'Please enter all 6 digits';
+                return;
+            }
+
+            // Show loading state
+            const verifyBtn = document.querySelector('#otpForm button');
+            const originalText = verifyBtn.textContent;
+            verifyBtn.textContent = 'Verifying...';
+            verifyBtn.disabled = true;
+
+            // Verify OTP via Django API
+            fetch('/api/verify-otp/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ 
+                    mobile: mobileNumber,
+                    otp: enteredOTP 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Login successful! Redirecting...', 'success');
+                    
+                    // Store user info in session
+                    if (data.user_info) {
+                        sessionStorage.setItem('userInfo', JSON.stringify(data.user_info));
+                    }
+                    
+                    // Redirect to home page after successful login
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    otpError.textContent = data.error || 'Invalid OTP. Please try again.';
+                    verifyBtn.textContent = originalText;
+                    verifyBtn.disabled = false;
+                    
+                    // Clear OTP inputs
+                    otpInputs.forEach(input => input.value = '');
+                    otpInputs[0].focus();
+                }
+            })
+            .catch(error => {
+                console.error('Error verifying OTP:', error);
+                otpError.textContent = 'Network error. Please try again.';
+                verifyBtn.textContent = originalText;
+                verifyBtn.disabled = false;
+            });
+        }
+
+        function moveToNext(current, index) {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            
+            if (current.value.length === 1) {
+                if (index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            } else if (current.value.length === 0 && index > 0) {
+                otpInputs[index - 1].focus();
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                document.getElementById('timer').textContent = `Time remaining: ${timeRemaining}s`;
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('timer').textContent = 'OTP expired';
+                    // Reset to mobile form
+                    document.getElementById('otpForm').classList.add('hidden');
+                    document.getElementById('mobileForm').classList.remove('hidden');
+                    timeRemaining = 60;
+                }
+            }, 1000);
+        }
+
+        function resendOTP() {
+            const mobileNumber = document.getElementById('otpForm').dataset.mobile;
+            
+            if (!mobileNumber) {
+                showMessage('Mobile number not found. Please start again.', 'error');
+                return;
+            }
+            
+            // Reset timer
+            clearInterval(timerInterval);
+            timeRemaining = 60;
+            
+            // Send OTP via Django API
+            fetch('/api/send-otp/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ mobile: mobileNumber })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.sms_sent) {
+                        showMessage('New OTP sent successfully via SMS!', 'success');
+                    } else {
+                        showMessage(`New Demo OTP: ${data.demo_otp}`, 'info');
+                    }
+                    
+                    // Clear OTP inputs
+                    document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+                    document.querySelectorAll('.otp-input')[0].focus();
+                    
+                    // Restart timer
+                    startTimer();
+                } else {
+                    showMessage('Failed to resend OTP. Please try again.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error resending OTP:', error);
+                showMessage('Network error. Please try again.', 'error');
+            });
+        }
+
+        function showMessage(message, type = 'info') {
+            // Create message element
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            // Set background color based on type
+            if (type === 'success') {
+                messageDiv.style.background = '#27ae60';
+            } else if (type === 'error') {
+                messageDiv.style.background = '#e74c3c';
+            } else {
+                messageDiv.style.background = '#667eea';
+            }
+            
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            // Remove message after 3 seconds
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 3000);
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Auto-format mobile number input
+        document.getElementById('mobileNumber').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        // Auth is handled by Django session (login_required)
+    </script>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

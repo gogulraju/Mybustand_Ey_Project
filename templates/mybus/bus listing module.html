@@ -1,0 +1,885 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Listing - MyBusStand</title>
+    <style>
+        /* Header Styles */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 25px;
+        }
+
+        .login-btn,
+        .logout-btn {
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover,
+        .logout-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .bus-list-header {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .route-info h1 {
+            color: #333;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .route-path {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .route-arrow {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            background: #f8f9fa;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .bus-list {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .bus-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .bus-list-header h2 {
+            color: #333;
+            font-size: 1.5rem;
+        }
+
+        .sort-dropdown {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .bus-card {
+            background: #f8f9fa;
+            border: 2px solid #e1e1e1;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .bus-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .bus-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .bus-number {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .bus-type {
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .bus-route {
+            color: #666;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .bus-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .bus-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .track-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .track-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .fare-info {
+            text-align: right;
+            flex: 1;
+        }
+
+        .fare-amount {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .fare-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .no-buses {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .no-buses-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-on-time {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-delayed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-arriving {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .bus-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .bus-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .track-btn {
+                width: 100%;
+            }
+
+            .fare-info {
+                text-align: left;
+            }
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .footer-links .nav-link:hover {
+            color: white;
+        }
+
+        /* Message Banner */
+        .message-banner {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .user-info {
+                margin-top: 1rem;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .bus-list-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                🚌 MyBusStand
+            </div>
+            <nav class="nav-links">
+                <a href="{% url 'home' %}" class="nav-link">Home</a>
+                <a href="{% url 'route_search' %}" class="nav-link">Routes</a>
+                <a href="{% url 'bus_list' %}" class="nav-link active">Buses</a>
+                <a href="{% url 'bus_tracking' %}" class="nav-link">Tracking</a>
+                <a href="{% url 'chatbot' %}" class="nav-link">Support</a>
+                <a href="{% url 'about' %}" class="nav-link">About</a>
+                <a href="{% url 'contact' %}" class="nav-link">Contact</a>
+            </nav>
+            <div class="user-info">
+                {% if user.is_authenticated %}
+                    <div class="user-profile">
+                        <span>👤 {{ user.get_full_name|default:user.username }}</span>
+                        <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="login-btn">Mobile Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>🚌 Bus Listing</h1>
+            <p>Available buses for your journey</p>
+        </div>
+
+        {% if message %}
+            <div class="message-banner">
+                <p>🚧 {{ message }}</p>
+            </div>
+        {% endif %}
+
+        <div class="bus-list-header">
+            <div class="route-info">
+                <h1>Available Buses</h1>
+                {% if search_params.from and search_params.to %}
+                    <div class="route-path">
+                        <span>{{ search_params.from }}</span>
+                        <span class="route-arrow">→</span>
+                        <span>{{ search_params.to }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            <button class="back-btn" onclick="history.back()">← Back to Search</button>
+        </div>
+
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="busType">Bus Type</label>
+                    <select id="busType" onchange="filterBuses()">
+                        <option value="">All Types</option>
+                        <option value="AC">AC Bus</option>
+                        <option value="Non-AC">Non-AC Bus</option>
+                        <option value="Volvo">Volvo</option>
+                        <option value="Express">Express</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="priceRange">Max Fare</label>
+                    <select id="priceRange" onchange="filterBuses()">
+                        <option value="">Any Price</option>
+                        <option value="50">Under ₹50</option>
+                        <option value="100">Under ₹100</option>
+                        <option value="200">Under ₹200</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="sortBy">Sort By</label>
+                    <select id="sortBy" onchange="sortBuses()">
+                        <option value="departure">Departure Time</option>
+                        <option value="fare">Lowest Fare</option>
+                        <option value="duration">Shortest Duration</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="bus-list">
+            <div class="bus-list-header">
+                <h2 id="busCount">Loading buses...</h2>
+                <select class="sort-dropdown" onchange="sortBuses()">
+                    <option value="departure">Sort by Departure</option>
+                    <option value="fare">Sort by Fare</option>
+                    <option value="duration">Sort by Duration</option>
+                </select>
+            </div>
+
+            <div id="busListContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Finding available buses...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allBuses = [];
+        let filteredBuses = [];
+
+        // Sample bus data
+        const sampleBuses = [
+            {
+                id: 1,
+                number: 'KA-01-AB-1234',
+                type: 'Volvo AC',
+                route: 'chennai → madurai → MG Road',
+                departure: '08:30 AM',
+                arrival: '09:45 AM',
+                duration: '1h 15m',
+                fare: 85,
+                status: 'on-time',
+                availableSeats: 12,
+                totalSeats: 40
+            },
+            {
+                id: 2,
+                number: 'KA-01-CD-5678',
+                type: 'Non-AC',
+                route: 'Electronic City → BTM Layout → Koramangala',
+                departure: '09:00 AM',
+                arrival: '10:30 AM',
+                duration: '1h 30m',
+                fare: 45,
+                status: 'delayed',
+                availableSeats: 8,
+                totalSeats: 35
+            },
+            {
+                id: 3,
+                number: 'KA-01-EF-9012',
+                type: 'AC Bus',
+                route: 'Electronic City → Silk Board → Koramangala',
+                departure: '09:15 AM',
+                arrival: '10:20 AM',
+                duration: '1h 5m',
+                fare: 65,
+                status: 'on-time',
+                availableSeats: 25,
+                totalSeats: 45
+            },
+            {
+                id: 4,
+                number: 'KA-01-GH-3456',
+                type: 'Express',
+                route: 'Electronic City → Koramangala (Direct)',
+                departure: '09:30 AM',
+                arrival: '10:15 AM',
+                duration: '45m',
+                fare: 75,
+                status: 'arriving',
+                availableSeats: 5,
+                totalSeats: 30
+            },
+            {
+                id: 5,
+                number: 'KA-01-IJ-7890',
+                type: 'Volvo AC',
+                route: 'Electronic City → HSR Layout → Koramangala',
+                departure: '10:00 AM',
+                arrival: '11:10 AM',
+                duration: '1h 10m',
+                fare: 90,
+                status: 'on-time',
+                availableSeats: 18,
+                totalSeats: 40
+            }
+        ];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSearchData();
+            setTimeout(() => {
+                loadBuses();
+            }, 1500);
+        });
+
+        function loadSearchData() {
+            const searchData = JSON.parse(localStorage.getItem('searchData'));
+            if (searchData) {
+                document.getElementById('fromLocation').textContent = searchData.from;
+                document.getElementById('toLocation').textContent = searchData.to;
+            } else {
+                // Default values if no search data
+                document.getElementById('fromLocation').textContent = 'Electronic City';
+                document.getElementById('toLocation').textContent = 'Koramangala';
+            }
+        }
+
+        async function loadBuses() {
+            try {
+                const resp = await fetch('/buses/api/', { credentials: 'same-origin' });
+                if (!resp.ok) {
+                    throw new Error('API error');
+                }
+                const data = await resp.json();
+                const results = Array.isArray(data.results) ? data.results : [];
+
+                if (results.length === 0) {
+                    allBuses = [...sampleBuses];
+                } else {
+                    allBuses = results.map((b) => ({
+                        id: b.id,
+                        number: b.number_plate,
+                        type: b.is_active ? 'Active' : 'Inactive',
+                        route: 'Route not set',
+                        departure: '--',
+                        arrival: '--',
+                        duration: '--',
+                        fare: 0,
+                        status: b.is_active ? 'on-time' : 'delayed',
+                        availableSeats: b.capacity,
+                        totalSeats: b.capacity,
+                    }));
+                }
+
+                filteredBuses = [...allBuses];
+                displayBuses();
+            } catch (e) {
+                allBuses = [...sampleBuses];
+                filteredBuses = [...allBuses];
+                displayBuses();
+            }
+        }
+
+        function displayBuses() {
+            const container = document.getElementById('busListContainer');
+            const countElement = document.getElementById('busCount');
+            
+            if (filteredBuses.length === 0) {
+                container.innerHTML = `
+                    <div class="no-buses">
+                        <div class="no-buses-icon">🚌</div>
+                        <h3>No buses found</h3>
+                        <p>Try adjusting your filters or search for a different route</p>
+                    </div>
+                `;
+                countElement.textContent = 'No buses available';
+                return;
+            }
+
+            countElement.textContent = `${filteredBuses.length} buses available`;
+
+            container.innerHTML = filteredBuses.map(bus => `
+                <div class="bus-card">
+                    <div class="bus-header">
+                        <div>
+                            <div class="bus-number">${bus.number}</div>
+                            <div class="bus-route">${bus.route}</div>
+                        </div>
+                        <span class="bus-type">${bus.type}</span>
+                    </div>
+                    
+                    <div class="bus-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Departure</span>
+                            <span class="detail-value">${bus.departure}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Arrival</span>
+                            <span class="detail-value">${bus.arrival}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Duration</span>
+                            <span class="detail-value">${bus.duration}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Seats Available</span>
+                            <span class="detail-value">${bus.availableSeats}/${bus.totalSeats}</span>
+                        </div>
+                    </div>
+
+                    <div class="bus-actions">
+                        <button class="track-btn" onclick="trackBus(${bus.id})">
+                            📍 Track Bus
+                        </button>
+                        <div class="fare-info">
+                            <div class="fare-amount">₹${bus.fare}</div>
+                            <div class="fare-label">per person</div>
+                        </div>
+                        <span class="status-badge status-${bus.status}">
+                            ${bus.status.replace('-', ' ').toUpperCase()}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterBuses() {
+            const busType = document.getElementById('busType').value;
+            const priceRange = document.getElementById('priceRange').value;
+
+            filteredBuses = allBuses.filter(bus => {
+                const typeMatch = !busType || bus.type.toLowerCase().includes(busType.toLowerCase());
+                const priceMatch = !priceRange || bus.fare <= parseInt(priceRange);
+                return typeMatch && priceMatch;
+            });
+
+            displayBuses();
+        }
+
+        function sortBuses() {
+            const sortBy = document.getElementById('sortBy').value;
+
+            filteredBuses.sort((a, b) => {
+                switch (sortBy) {
+                    case 'fare':
+                        return a.fare - b.fare;
+                    case 'duration':
+                        return parseDuration(a.duration) - parseDuration(b.duration);
+                    case 'departure':
+                    default:
+                        return compareTime(a.departure, b.departure);
+                }
+            });
+
+            displayBuses();
+        }
+
+        function parseDuration(duration) {
+            const parts = duration.match(/(\d+)h\s*(\d+)m/);
+            if (parts) {
+                return parseInt(parts[1]) * 60 + parseInt(parts[2]);
+            }
+            return 0;
+        }
+
+        function compareTime(time1, time2) {
+            const t1 = new Date('2000-01-01 ' + time1);
+            const t2 = new Date('2000-01-01 ' + time2);
+            return t1 - t2;
+        }
+
+        function trackBus(busId) {
+            const bus = allBuses.find(b => b.id === busId);
+            if (bus) {
+                // Store selected bus data for tracking
+                localStorage.setItem('selectedBus', JSON.stringify(bus));
+                window.location.href = '/tracking/';
+            }
+        }
+
+        function goBack() {
+            window.location.href = '{% url "route_search" %}';
+        }
+    </script>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="{% url 'home' %}" class="nav-link">Home</a>
+            <a href="{% url 'about' %}" class="nav-link">About</a>
+            <a href="{% url 'contact' %}" class="nav-link">Contact</a>
+            <a href="{% url 'chatbot' %}" class="nav-link">Support</a>
+        </div>
+        <p>&copy; 2024 MyBusStand. All rights reserved. Made with ❤️ for smart travelers.</p>
+    </footer>
+</body>
+</html>

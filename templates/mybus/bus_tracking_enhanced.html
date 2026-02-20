@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Bus Tracking - MyBusStand</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .tracking-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .bus-list-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .bus-list-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bus-list {
+            display: grid;
+            gap: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .bus-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .bus-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: #e3f2fd;
+        }
+
+        .bus-item.active {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+            transform: translateX(10px);
+        }
+
+        .bus-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .bus-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .bus-route {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .bus-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: #4caf50;
+            color: white;
+        }
+
+        .bus-status.delayed {
+            background: #ff9800;
+        }
+
+        .bus-status.stopped {
+            background: #f44336;
+        }
+
+        .bus-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .map-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .map-container {
+            height: 500px;
+            border-radius: 10px;
+            background: #f0f0f0;
+            border: 2px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-content {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .bus-marker {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
+            z-index: 10;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            grid-column: 1 / -1;
+        }
+
+        .info-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-item h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .info-item p {
+            color: #666;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .info-item .value {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .controls-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .controls-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .tracking-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📍 Live Bus Tracking</h1>
+            <p>Track buses in real-time with enhanced visualization</p>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <div class="tracking-container">
+            <!-- Bus List Section -->
+            <div class="bus-list-section">
+                <h3>🚌 Available Buses</h3>
+                <div id="busList" class="bus-list">
+                    <div class="loading">Loading buses...</div>
+                </div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="map-section">
+                <h3>🗺️ Live Map</h3>
+                <div class="map-container" id="mapContainer">
+                    <div class="map-content">
+                        <div class="bus-marker" id="busMarker">🚌</div>
+                        <div style="margin-top: 20px;">
+                            <p><strong>Select a bus to track its location</strong></p>
+                            <p>Bus information will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bus Information Section -->
+        <div class="info-section">
+            <h3>🚌 Bus Information</h3>
+            <div class="info-grid" id="busInfo">
+                <div class="info-item">
+                    <h4>Bus Name</h4>
+                    <p class="value" id="busName">-</p>
+                </div>
+                <div class="info-item">
+                    <h4>Route</h4>
+                    <p class="value" id="busRoute">-</p>
+                </div>
+                <div class="info-item">
+                    <h4>Status</h4>
+                    <p class="value" id="busStatus">-</p>
+                </div>
+                <div class="info-item">
+                    <h4>Departure</h4>
+                    <p class="value" id="busDeparture">-</p>
+                </div>
+                <div class="info-item">
+                    <h4>Arrival</h4>
+                    <p class="value" id="busArrival">-</p>
+                </div>
+                <div class="info-item">
+                    <h4>Speed</h4>
+                    <p class="value" id="busSpeed">-</p>
+                </div>
+                <div class="info-item">
+                    <h4>Last Updated</h4>
+                    <p class="value" id="busLastUpdated">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <h3>🎛️ Tracking Controls</h3>
+            <div class="controls-grid">
+                <button class="btn" onclick="refreshTracking()">
+                    🔄 Refresh Location
+                </button>
+                <button class="btn btn-secondary" onclick="centerMapOnBus()">
+                    🎯 Center on Bus
+                </button>
+                <button class="btn btn-secondary" onclick="showAllBuses()">
+                    🚌 Show All Buses
+                </button>
+                <button class="btn btn-secondary" onclick="toggleAutoRefresh()">
+                    ⏸️ Toggle Auto Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedBusId = null;
+        let trackingInterval = null;
+        let buses = [];
+        let autoRefresh = true;
+
+        // Load buses on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBuses();
+            
+            // Check for bus_id parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const busId = urlParams.get('bus_id');
+            if (busId) {
+                // Auto-select the specified bus
+                setTimeout(() => {
+                    selectBus(parseInt(busId));
+                }, 1000);
+            }
+            
+            // Start auto-refresh
+            startAutoRefresh();
+        });
+
+        // Load all buses
+        async function loadBuses() {
+            try {
+                const response = await fetch('/bus/api/all-buses/');
+                const data = await response.json();
+                
+                if (data.success) {
+                    buses = data.buses;
+                    displayBusList(buses);
+                    showMessage('Buses loaded successfully!', 'success');
+                } else {
+                    showMessage('Failed to load buses: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error loading buses:', error);
+                showMessage('Error loading buses. Please try again.', 'error');
+            }
+        }
+
+        // Display bus list
+        function displayBusList(buses) {
+            const busList = document.getElementById('busList');
+            
+            if (!buses || buses.length === 0) {
+                busList.innerHTML = '<div class="loading">No buses available</div>';
+                return;
+            }
+            
+            let html = '';
+            buses.forEach(bus => {
+                html += `
+                    <div class="bus-item" onclick="selectBus(${bus.id})" data-bus-id="${bus.id}">
+                        <div class="bus-info">
+                            <div class="bus-name">${bus.bus_name}</div>
+                            <div class="bus-route">${bus.route}</div>
+                            <span class="bus-status ${bus.status}">${bus.status}</span>
+                        </div>
+                        <div class="bus-actions">
+                            <button class="btn-small" onclick="event.stopPropagation(); trackBus(${bus.id})">
+                                📍 Track
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            busList.innerHTML = html;
+        }
+
+        // Select bus for tracking
+        function selectBus(busId) {
+            // Remove active class from all buses
+            document.querySelectorAll('.bus-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to selected bus
+            const selectedBus = document.querySelector(`[data-bus-id="${busId}"]`);
+            if (selectedBus) {
+                selectedBus.classList.add('active');
+            }
+            
+            selectedBusId = busId;
+            
+            // Load bus information
+            loadBusInfo(busId);
+            
+            // Start tracking this bus
+            trackBusLocation(busId);
+        }
+
+        // Load bus information
+        async function loadBusInfo(busId) {
+            try {
+                const response = await fetch(`/bus/api/track-bus/${busId}/`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateBusInfo(data);
+                } else {
+                    showMessage('Failed to load bus information: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error loading bus info:', error);
+                showMessage('Error loading bus information. Please try again.', 'error');
+            }
+        }
+
+        // Update bus information display
+        function updateBusInfo(busData) {
+            document.getElementById('busName').textContent = busData.bus_name || '-';
+            document.getElementById('busRoute').textContent = busData.route || '-';
+            document.getElementById('busStatus').textContent = busData.status || '-';
+            document.getElementById('busDeparture').textContent = busData.departure_time || '-';
+            document.getElementById('busArrival').textContent = busData.arrival_time || '-';
+            document.getElementById('busLastUpdated').textContent = busData.last_updated || '-';
+            
+            // Calculate speed (mock calculation for presentation)
+            if (busData.latitude && busData.longitude) {
+                const speed = Math.floor(Math.random() * 40 + 30); // Mock speed 30-70 km/h
+                document.getElementById('busSpeed').textContent = `${speed} km/h`;
+            } else {
+                document.getElementById('busSpeed').textContent = '-';
+            }
+        }
+
+        // Track bus location
+        async function trackBusLocation(busId) {
+            if (!busId) return;
+            
+            try {
+                const response = await fetch(`/bus/api/track-bus/${busId}/`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateMapMarker(data);
+                    updateBusInfo(data);
+                } else {
+                    showMessage('Failed to track bus: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error tracking bus:', error);
+                showMessage('Error tracking bus. Please try again.', 'error');
+            }
+        }
+
+        // Update map marker
+        function updateMapMarker(busData) {
+            const mapContainer = document.getElementById('mapContainer');
+            const busMarker = document.getElementById('busMarker');
+            
+            if (busData.latitude && busData.longitude) {
+                // Create animated marker
+                const markerHtml = `
+                    <div class="bus-marker" style="position: absolute; top: ${Math.random() * 60 + 20}%; left: ${Math.random() * 60 + 20}%;">
+                        🚌
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <p><strong>${busData.bus_name}</strong></p>
+                        <p><strong>Route:</strong> ${busData.route}</p>
+                        <p><strong>Status:</strong> <span class="bus-status ${busData.status}">${busData.status}</span></p>
+                        <p><strong>Location:</strong> ${busData.latitude}, ${busData.longitude}</p>
+                        <p><strong>Speed:</strong> ${Math.floor(Math.random() * 40 + 30)} km/h</p>
+                        <p><strong>Updated:</strong> ${busData.last_updated}</p>
+                    </div>
+                `;
+                
+                mapContainer.innerHTML = markerHtml;
+            } else {
+                mapContainer.innerHTML = `
+                    <div class="map-content">
+                        <div class="bus-marker">🚌</div>
+                        <div style="margin-top: 20px;">
+                            <p><strong>No location data available</strong></p>
+                            <p>Select a bus to track its location</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Refresh tracking
+        function refreshTracking() {
+            if (selectedBusId) {
+                trackBusLocation(selectedBusId);
+                showMessage('Location refreshed!', 'info');
+            } else {
+                showMessage('Please select a bus to track', 'info');
+            }
+        }
+
+        // Center map on bus
+        function centerMapOnBus() {
+            if (selectedBusId) {
+                const busMarker = document.getElementById('busMarker');
+                if (busMarker) {
+                    busMarker.style.top = '50%';
+                    busMarker.style.left = '50%';
+                    busMarker.style.transform = 'translate(-50%, -50%)';
+                }
+                showMessage('Map centered on bus!', 'info');
+            } else {
+                showMessage('Please select a bus to center', 'info');
+            }
+        }
+
+        // Show all buses
+        function showAllBuses() {
+            const busList = document.getElementById('busList');
+            const allBuses = document.querySelectorAll('.bus-item');
+            
+            allBuses.forEach(bus => {
+                bus.style.display = 'flex';
+            });
+            
+            showMessage('All buses displayed!', 'info');
+        }
+
+        // Toggle auto refresh
+        function toggleAutoRefresh() {
+            autoRefresh = !autoRefresh;
+            
+            if (autoRefresh) {
+                startAutoRefresh();
+                showMessage('Auto refresh enabled (5 seconds)', 'info');
+            } else {
+                stopAutoRefresh();
+                showMessage('Auto refresh disabled', 'info');
+            }
+        }
+
+        // Start auto refresh
+        function startAutoRefresh() {
+            if (trackingInterval) {
+                clearInterval(trackingInterval);
+            }
+            
+            trackingInterval = setInterval(() => {
+                if (selectedBusId) {
+                    trackBusLocation(selectedBusId);
+                }
+            }, 5000); // Update every 5 seconds
+        }
+
+        // Stop auto refresh
+        function stopAutoRefresh() {
+            if (trackingInterval) {
+                clearInterval(trackingInterval);
+                trackingInterval = null;
+            }
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            const messageContainer = document.getElementById('messageContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            let icon = '';
+            if (type === 'success') icon = '✅';
+            else if (type === 'error') icon = '❌';
+            else if (type === 'info') icon = 'ℹ️';
+            
+            messageDiv.innerHTML = `<span>${icon}</span> ${message}`;
+            
+            messageContainer.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Log page load
+        console.log('Enhanced Bus Tracking Page Loaded');
+    </script>
+</body>
+</html>

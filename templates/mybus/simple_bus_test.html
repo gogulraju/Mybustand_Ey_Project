@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Test - MyBusStand</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚌 Bus System Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Get All Buses</h2>
+        <button class="btn" onclick="testAllBuses()">Get All Buses</button>
+        <div id="allBusesResult" class="result" style="display:none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Search Buses</h2>
+        <label>From: <input type="text" id="fromCity" value="Chennai"></label><br><br>
+        <label>To: <input type="text" id="toCity" value="Kanchipuram"></label><br><br>
+        <button class="btn" onclick="testSearchBuses()">Search Buses</button>
+        <div id="searchResult" class="result" style="display:none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Track Bus</h2>
+        <label>Bus ID: <input type="text" id="busId" value="17"></label><br><br>
+        <button class="btn" onclick="testTrackBus()">Track Bus</button>
+        <div id="trackResult" class="result" style="display:none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 4: Open Bus Tracking Map</h2>
+        <button class="btn" onclick="window.open('/bus/bus-tracking-map/', '_blank')">Open Tracking Map</button>
+        <div id="mapResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        async function testAllBuses() {
+            const resultDiv = document.getElementById('allBusesResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch('/bus/api/all-buses/');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Success!</strong><br>
+                        Found ${data.total_buses} buses:<br>
+                        ${data.buses.map(bus => `• ${bus.bus_name} - ${bus.route}`).join('<br>')}
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>❌ Error:</strong> ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ Exception:</strong> ${error.message}`;
+            }
+        }
+        
+        async function testSearchBuses() {
+            const from = document.getElementById('fromCity').value;
+            const to = document.getElementById('toCity').value;
+            const resultDiv = document.getElementById('searchResult');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = 'Searching...';
+            
+            try {
+                const response = await fetch('/bus/api/search-bus/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ from, to })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Search Success!</strong><br>
+                        Route: ${data.route}<br>
+                        Found ${data.total_buses} buses:<br>
+                        ${data.buses.map(bus => `• ${bus.bus_name} (${bus.departure_time} - ${bus.arrival_time})`).join('<br>')}
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>❌ Search Error:</strong> ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ Exception:</strong> ${error.message}`;
+            }
+        }
+        
+        async function testTrackBus() {
+            const busId = document.getElementById('busId').value;
+            const resultDiv = document.getElementById('trackResult');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = 'Tracking...';
+            
+            try {
+                const response = await fetch(`/bus/api/track-bus/${busId}/`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Tracking Success!</strong><br>
+                        Bus: ${data.bus_name}<br>
+                        Route: ${data.route}<br>
+                        Status: ${data.status}<br>
+                        Location: (${data.latitude}, ${data.longitude})<br>
+                        Last Updated: ${data.last_updated}
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>❌ Tracking Error:</strong> ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ Exception:</strong> ${error.message}`;
+            }
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            console.log('Bus test page loaded');
+            testAllBuses();
+        };
+    </script>
+</body>
+</html>

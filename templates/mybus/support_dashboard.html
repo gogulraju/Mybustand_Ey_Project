@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Dashboard - MyBusStand</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .list-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .list-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-item h4 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .list-item p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .list-item .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-in_progress { background: #cce5ff; color: #004085; }
+        .status-resolved { background: #d4edda; color: #155724; }
+        .status-closed { background: #f8d7da; color: #721c24; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ Support Dashboard</h1>
+            <p>Submit queries, complaints, and track your support requests</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('query')">📝 Submit Query</button>
+            <button class="tab" onclick="showTab('complaint')">⚠️ File Complaint</button>
+            <button class="tab" onclick="showTab('my-queries')">📋 My Queries</button>
+            <button class="tab" onclick="showTab('my-complaints')">📄 My Complaints</button>
+        </div>
+
+        <!-- Submit Query Tab -->
+        <div id="query-tab" class="tab-content active">
+            <div class="form-section">
+                <h2>Submit a Query</h2>
+                <form id="queryForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="queryType">Query Type</label>
+                            <select id="queryType" required>
+                                <option value="">Select Query Type</option>
+                                <option value="general">General Query</option>
+                                <option value="route">Route Information</option>
+                                <option value="timing">Timing Query</option>
+                                <option value="booking">Booking Issue</option>
+                                <option value="payment">Payment Issue</option>
+                                <option value="technical">Technical Issue</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="queryPriority">Priority</label>
+                            <select id="queryPriority" required>
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="querySubject">Subject</label>
+                        <input type="text" id="querySubject" placeholder="Brief subject of your query" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="queryMessage">Message</label>
+                        <textarea id="queryMessage" placeholder="Describe your query in detail" required></textarea>
+                    </div>
+                    <button type="submit" class="btn">Submit Query</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- File Complaint Tab -->
+        <div id="complaint-tab" class="tab-content">
+            <div class="form-section">
+                <h2>File a Complaint</h2>
+                <form id="complaintForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="complaintType">Complaint Type</label>
+                            <select id="complaintType" required>
+                                <option value="">Select Complaint Type</option>
+                                <option value="service">Service Issue</option>
+                                <option value="behavior">Staff Behavior</option>
+                                <option value="bus_condition">Bus Condition</option>
+                                <option value="safety">Safety Concern</option>
+                                <option value="cleanliness">Cleanliness Issue</option>
+                                <option value="delay">Delay Issue</option>
+                                <option value="lost_found">Lost & Found</option>
+                                <option value="other">Other Complaint</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="complaintSeverity">Severity</label>
+                            <select id="complaintSeverity" required>
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="complaintSubject">Subject</label>
+                        <input type="text" id="complaintSubject" placeholder="Brief subject of your complaint" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="complaintDescription">Description</label>
+                        <textarea id="complaintDescription" placeholder="Describe your complaint in detail" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="busNumber">Bus Number (if applicable)</label>
+                            <input type="text" id="busNumber" placeholder="e.g., KA-01-1234">
+                        </div>
+                        <div class="form-group">
+                            <label for="route">Route (if applicable)</label>
+                            <input type="text" id="route" placeholder="e.g., Electronic City → Majestic">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="incidentDate">Incident Date & Time</label>
+                            <input type="datetime-local" id="incidentDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="incidentLocation">Incident Location</label>
+                            <input type="text" id="incidentLocation" placeholder="Where did this happen?">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">File Complaint</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- My Queries Tab -->
+        <div id="my-queries-tab" class="tab-content">
+            <div class="list-section">
+                <h2>My Queries</h2>
+                <div id="queriesList" class="loading">
+                    Loading your queries...
+                </div>
+            </div>
+        </div>
+
+        <!-- My Complaints Tab -->
+        <div id="my-complaints-tab" class="tab-content">
+            <div class="list-section">
+                <h2>My Complaints</h2>
+                <div id="complaintsList" class="loading">
+                    Loading your complaints...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'query';
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+            currentTab = tabName;
+
+            // Load data if needed
+            if (tabName === 'my-queries') {
+                loadQueries();
+            } else if (tabName === 'my-complaints') {
+                loadComplaints();
+            }
+        }
+
+        // Submit Query
+        document.getElementById('queryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                query_type: document.getElementById('queryType').value,
+                priority: document.getElementById('queryPriority').value,
+                subject: document.getElementById('querySubject').value,
+                message: document.getElementById('queryMessage').value
+            };
+
+            try {
+                const response = await fetch('/api/submit-query/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('Query submitted successfully!', 'success');
+                    document.getElementById('queryForm').reset();
+                } else {
+                    showMessage(data.error || 'Failed to submit query', 'error');
+                }
+            } catch (error) {
+                showMessage('Error submitting query', 'error');
+            }
+        });
+
+        // Submit Complaint
+        document.getElementById('complaintForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                complaint_type: document.getElementById('complaintType').value,
+                severity: document.getElementById('complaintSeverity').value,
+                subject: document.getElementById('complaintSubject').value,
+                description: document.getElementById('complaintDescription').value,
+                bus_number: document.getElementById('busNumber').value,
+                route: document.getElementById('route').value,
+                incident_date: document.getElementById('incidentDate').value,
+                incident_location: document.getElementById('incidentLocation').value
+            };
+
+            try {
+                const response = await fetch('/api/submit-complaint/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('Complaint submitted successfully!', 'success');
+                    document.getElementById('complaintForm').reset();
+                } else {
+                    showMessage(data.error || 'Failed to submit complaint', 'error');
+                }
+            } catch (error) {
+                showMessage('Error submitting complaint', 'error');
+            }
+        });
+
+        // Load Queries
+        async function loadQueries() {
+            try {
+                const response = await fetch('/api/get-queries/');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayQueries(data.queries);
+                } else {
+                    showMessage(data.error || 'Failed to load queries', 'error');
+                }
+            } catch (error) {
+                showMessage('Error loading queries', 'error');
+            }
+        }
+
+        // Load Complaints
+        async function loadComplaints() {
+            try {
+                const response = await fetch('/api/get-complaints/');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayComplaints(data.complaints);
+                } else {
+                    showMessage(data.error || 'Failed to load complaints', 'error');
+                }
+            } catch (error) {
+                showMessage('Error loading complaints', 'error');
+            }
+        }
+
+        // Display Queries
+        function displayQueries(queries) {
+            const container = document.getElementById('queriesList');
+            
+            if (queries.length === 0) {
+                container.innerHTML = '<p>No queries found.</p>';
+                return;
+            }
+
+            container.innerHTML = queries.map(query => `
+                <div class="list-item">
+                    <h4>${query.subject}</h4>
+                    <p>${query.message}</p>
+                    <div class="meta">
+                        <span>Type: ${query.query_type} | Priority: ${query.priority}</span>
+                        <span class="status-badge status-${query.status}">${query.status.replace('_', ' ')}</span>
+                    </div>
+                    <div class="meta">
+                        <span>Submitted: ${query.created_at}</span>
+                        ${query.responded_at ? `<span>Responded: ${query.responded_at}</span>` : ''}
+                    </div>
+                    ${query.admin_response ? `<div class="meta"><strong>Response:</strong> ${query.admin_response}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Display Complaints
+        function displayComplaints(complaints) {
+            const container = document.getElementById('complaintsList');
+            
+            if (complaints.length === 0) {
+                container.innerHTML = '<p>No complaints found.</p>';
+                return;
+            }
+
+            container.innerHTML = complaints.map(complaint => `
+                <div class="list-item">
+                    <h4>${complaint.subject}</h4>
+                    <p>${complaint.description}</p>
+                    <div class="meta">
+                        <span>Type: ${complaint.complaint_type} | Severity: ${complaint.severity}</span>
+                        <span class="status-badge status-${complaint.status}">${complaint.status.replace('_', ' ')}</span>
+                    </div>
+                    <div class="meta">
+                        <span>Submitted: ${complaint.created_at}</span>
+                        ${complaint.resolved_at ? `<span>Resolved: ${complaint.resolved_at}</span>` : ''}
+                    </div>
+                    ${complaint.bus_number ? `<div class="meta"><strong>Bus:</strong> ${complaint.bus_number}</div>` : ''}
+                    ${complaint.route ? `<div class="meta"><strong>Route:</strong> ${complaint.route}</div>` : ''}
+                    ${complaint.resolution_details ? `<div class="meta"><strong>Resolution:</strong> ${complaint.resolution_details}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(messageDiv, container.firstChild);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

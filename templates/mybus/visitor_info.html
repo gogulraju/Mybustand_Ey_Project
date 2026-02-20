@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Information - MyBusStand</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .info-card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-item h4 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        .info-item p {
+            color: #666;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .info-item .value {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .status-badge.new {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-badge.returning {
+            background: #2196f3;
+            color: white;
+        }
+
+        .cookie-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .cookie-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #667eea;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .info-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👤 Visitor Information</h1>
+            <p>View and test visitor cookie functionality</p>
+        </div>
+
+        <div class="info-card">
+            <h3>🍪 Visitor Cookie Status</h3>
+            
+            <div class="info-item">
+                <h4>Visitor ID</h4>
+                <p class="value">{{ visitor_info.visitor_id|default:"Not Set" }}</p>
+            </div>
+            
+            <div class="info-item">
+                <h4>Visitor Type</h4>
+                <p>
+                    {% if visitor_info.is_new_visitor %}
+                        <span class="status-badge new">🎉 New Visitor</span>
+                    {% else %}
+                        <span class="status-badge returning">👋 Returning Visitor</span>
+                    {% endif %}
+                </p>
+            </div>
+            
+            <div class="info-item">
+                <h4>Cookie Status</h4>
+                <p class="value">
+                    {% if visitor_info.has_visitor_cookie %}
+                        ✅ Visitor cookie exists
+                    {% else %}
+                        ❌ No visitor cookie found
+                    {% endif %}
+                </p>
+            </div>
+            
+            <div class="info-item">
+                <h4>Total Cookies</h4>
+                <p class="value">{{ all_cookies|length }} cookies found</p>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3>📋 All Browser Cookies</h3>
+            <div class="cookie-list">
+                {% if all_cookies %}
+                    {% for name, value in all_cookies.items %}
+                        <div class="cookie-item">
+                            <strong>{{ name }}:</strong> {{ value }}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No cookies found</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3>🧪 Testing Options</h3>
+            <p>Test the visitor cookie functionality:</p>
+            
+            <a href="/" class="btn">🏠 Go to Home Page</a>
+            <a href="/cookies/" class="btn">🍪 Cookie Management</a>
+            <a href="/visitor-api-info/" class="btn btn-secondary">📊 API Info</a>
+            
+            <div style="margin-top: 20px;">
+                <p><strong>Instructions:</strong></p>
+                <ul style="margin-left: 20px; color: #666;">
+                    <li>Open this page in a new browser/incognito window to test new visitor cookie</li>
+                    <li>Refresh the page to see returning visitor status</li>
+                    <li>Check browser developer tools to view cookies</li>
+                    <li>Visit other pages to see automatic cookie setting</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh visitor info every 5 seconds
+        setInterval(function() {
+            fetch('/visitor-api-info/')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Visitor Info:', data);
+                })
+                .catch(error => {
+                    console.error('Error fetching visitor info:', error);
+                });
+        }, 5000);
+        
+        // Log visitor information on page load
+        console.log('Visitor Information Page Loaded');
+        console.log('Current cookies:', document.cookie);
+    </script>
+</body>
+</html>

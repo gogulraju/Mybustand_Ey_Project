@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Authentication</title>
+</head>
+<body>
+  <h1>Authentication</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+  </form>
+
+  <p>
+    <a href="/accounts/login/">Login</a> |
+    <a href="/accounts/register/">Register</a>
+  </p>
+
+  <p><a href="/">Home</a></p>
+</body>
+</html>
